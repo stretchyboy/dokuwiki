@@ -25,7 +25,14 @@ require_once(DOKU_INC.'inc/init.php');
 
 //import variables
 $QUERY = trim($_REQUEST['id']);
-$ID    = getID();
+if(!$_REQUEST['id'] && isset($_REQUEST['id_ns']) && isset($_REQUEST['id_id']))
+{
+  $ID = cleanID($_REQUEST['id_ns'].':'.$_REQUEST['id_id']);
+}
+else
+{
+  $ID    = getID();
+}
 $NS    = getNS($ID);
 $REV   = $_REQUEST['rev'];
 $IDX   = $_REQUEST['idx'];
