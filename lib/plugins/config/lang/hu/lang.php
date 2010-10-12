@@ -5,6 +5,8 @@
  * @author Sandor TIHANYI <stihanyi+dw@gmail.com>
  * @author Siaynoq Mage <siaynoqmage@gmail.com>
  * @author schilling.janos@gmail.com
+ * @author Szabó Dávid (szabo.david@gyumolcstarhely.hu)
+ * @author Szabó Dávid <szabo.david@gyumolcstarhely.hu>
  */
 $lang['menu']                  = 'Beállító Központ';
 $lang['error']                 = 'Helytelen érték miatt a módosítások nem mentődtek. Nézd át a módosításokat, és ments újra.
@@ -94,6 +96,7 @@ $lang['useslash']              = 'Per-jel használata névtér-elválasztóként
 $lang['usedraft']              = 'Piszkozat automatikus mentése szerkesztés alatt';
 $lang['sepchar']               = 'Szó elválasztó az oldalnevekben';
 $lang['canonical']             = 'Teljesen kanonikus URL-ek használata';
+$lang['fnencode']              = 'A nem ASCII fájlnevek dekódolási módja';
 $lang['autoplural']            = 'Többes szám ellenőrzés a hivatkozásokban (angol)';
 $lang['compression']           = 'Tömörítés használata a törölt lapokhoz';
 $lang['cachetime']             = 'A gyorsítótár maximális élettartama (másodperc)';
@@ -107,6 +110,7 @@ $lang['gdlib']                 = 'GD Lib verzió';
 $lang['im_convert']            = 'Útvonal az ImageMagick csomag convert parancsához';
 $lang['jpg_quality']           = 'JPG tömörítés minősége (0-100)';
 $lang['subscribers']           = 'Oldalváltozás-listára feliratkozás engedélyezése';
+$lang['subscribe_time']        = 'Az értesítések kiküldésének késleltetése (másodperc); Érdemes kisebbet választani, mint a változások megőrzésének maximális ideje.';
 $lang['compress']              = 'CSS és JavaScript fájlok tömörítése';
 $lang['hidepages']             = 'Az itt megadott oldalak elrejtése (reguláris kifejezés)';
 $lang['send404']               = '"HTTP 404/Page Not Found" küldése nemlétező oldalak esetén';
@@ -133,6 +137,7 @@ $lang['proxy____port']         = 'Proxy port';
 $lang['proxy____user']         = 'Proxy felhasználó név';
 $lang['proxy____pass']         = 'Proxy jelszó';
 $lang['proxy____ssl']          = 'SSL használata a proxyhoz csatlakozáskor';
+$lang['proxy____except']       = 'URL szabály azokra a webcímekre, amit szeretnél, hogy ne kezeljen a proxy.';
 $lang['safemodehack']          = 'A PHP safemode beállítás megkerülésének engedélyezése';
 $lang['ftp____host']           = 'FTP szerver a safemode megkerüléshez';
 $lang['ftp____port']           = 'FTP port a safemode megkerüléshez';
@@ -180,3 +185,4 @@ $lang['useheading_o_0']        = 'Soha';
 $lang['useheading_o_navigation'] = 'Csak navigációhoz';
 $lang['useheading_o_content']  = 'Csak Wiki tartalomhoz';
 $lang['useheading_o_1']        = 'Mindig';
+$lang['readdircache']          = 'A könyvtár olvasás gyorsítótárának maximális tárolási ideje (másodperc)';

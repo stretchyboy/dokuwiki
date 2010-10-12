@@ -86,7 +86,7 @@ function addLogEntry($date, $id, $type=DOKU_CHANGE_TYPE_EDIT, $summary='', $extr
             if ($user) $meta['contributor'][$user] = $INFO['userinfo']['name'];
         }
         $meta['last_change'] = $logline;
-        p_set_metadata($id, $meta, true);
+        p_set_metadata($id, $meta);
     }
 
     // add changelog lines
@@ -104,7 +104,7 @@ function addLogEntry($date, $id, $type=DOKU_CHANGE_TYPE_EDIT, $summary='', $extr
  * @author Ben Coburn <btcoburn@silicodon.net>
  */
 function addMediaLogEntry($date, $id, $type=DOKU_CHANGE_TYPE_EDIT, $summary='', $extra='', $flags=null){
-    global $conf, $INFO;
+    global $conf;
 
     $id = cleanid($id);
 

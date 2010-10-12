@@ -14,6 +14,7 @@
  * @author Vincent Feltz <psycho@feltzv.fr>
  * @author Philippe Bajoit <philippe.bajoit@gmail.com>
  * @author Florian Gaub <floriang@floriang.net>
+ * @author Samuel Dorsaz samuel.dorsaz@novelion.net
  */
 $lang['menu']                  = 'Paramètres de configuration';
 $lang['error']                 = 'Paramètres non modifiés en raison d\'une valeur non valide, vérifiez vos réglages et réessayez. <br />Les valeurs erronées sont entourées d\'une bordure rouge.';
@@ -101,6 +102,7 @@ $lang['useslash']              = 'Utiliser « / » comme séparateur de catég
 $lang['usedraft']              = 'Enregistrer automatiquement un brouillon pendant l\'édition';
 $lang['sepchar']               = 'Séparateur de mots dans les noms de page';
 $lang['canonical']             = 'Utiliser des URL canoniques';
+$lang['fnencode']              = 'Méhtode pou r l\'encodage des fichiers non-ASCII';
 $lang['autoplural']            = 'Rechercher les formes plurielles dans les liens';
 $lang['compression']           = 'Méthode de compression pour les fichiers dans attic';
 $lang['cachetime']             = 'Âge maximum d\'un fichier en cache (en secondes)';
@@ -142,6 +144,7 @@ $lang['proxy____port']         = 'Proxy - Numéro de port';
 $lang['proxy____user']         = 'Proxy - Identifiant';
 $lang['proxy____pass']         = 'Proxy - Mot de passe';
 $lang['proxy____ssl']          = 'Proxy - Utilisation de SSL';
+$lang['proxy____except']       = 'Expression régulière de test des URLs pour lesquelles le proxy ne devrait pas être utilisé.';
 $lang['safemodehack']          = 'Activer l\'option Mode sans échec';
 $lang['ftp____host']           = 'FTP - Serveur hôte pour Mode sans échec';
 $lang['ftp____port']           = 'FTP - Numéro de port pour Mode sans échec';
@@ -189,3 +192,4 @@ $lang['useheading_o_0']        = 'Jamais';
 $lang['useheading_o_navigation'] = 'Navigation seulement';
 $lang['useheading_o_content']  = 'Contenu du wiki seulement';
 $lang['useheading_o_1']        = 'Toujours';
+$lang['readdircache']          = 'Durée de vie maximale du cache pour readdir (sec)';

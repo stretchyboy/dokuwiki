@@ -96,7 +96,6 @@ function getID($param='id',$clean=true){
  */
 function cleanID($raw_id,$ascii=false,$media=false){
     global $conf;
-    global $lang;
     static $sepcharpat = null;
 
     global $cache_cleanid;
@@ -185,10 +184,10 @@ function noNSorNS($id) {
     global $conf;
 
     $p = noNS($id);
-    if ($p == $conf['start']) {
+    if ($p == $conf['start'] || $p == false) {
         $p = curNS($id);
         if ($p == false) {
-            return noNS($id);
+            return $conf['start'];
         }
     }
     return $p;
@@ -437,7 +436,8 @@ function resolve_pageid($ns,&$page,&$exists){
     $file = wikiFN($page);
 
     // if ends with colon or slash we have a namespace link
-    if(substr($page,-1) == ':' || ($conf['useslash'] && substr($page,-1) == '/')){
+    if(in_array(substr($page,-1), array(':', ';')) ||
+       ($conf['useslash'] && substr($page,-1) == '/')){
         if(page_exists($page.$conf['start'])){
             // start page inside namespace
             $page = $page.$conf['start'];

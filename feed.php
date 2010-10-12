@@ -248,12 +248,22 @@ function rss_buildItems(&$rss,&$data,$opt){
 
             // add user
             # FIXME should the user be pulled from metadata as well?
-            $user = null;
             $user = @$ditem['user']; // the @ spares time repeating lookup
             $item->author = '';
             if($user && $conf['useacl'] && $auth){
                 $userInfo = $auth->getUserData($user);
-                $item->author = $userInfo['name'];
+                if ($userInfo){
+                    switch ($conf['showuseras']){
+                        case 'username':
+                            $item->author = $userInfo['name'];
+                            break;
+                        default:
+                            $item->author = $user;
+                            break;
+                    }
+                } else {
+                    $item->author = $user;
+                }
                 if($userInfo && !$opt['guardmail']){
                     $item->authorEmail = $userInfo['mail'];
                 }else{
@@ -298,9 +308,6 @@ function rss_buildItems(&$rss,&$data,$opt){
  * @author Andreas Gohr <andi@splitbrain.org>
  */
 function rssRecentChanges($opt){
-    global $conf;
-    global $auth;
-
     $flags = RECENTS_SKIP_DELETED;
     if(!$opt['show_minor']) $flags += RECENTS_SKIP_MINORS;
 
@@ -336,7 +343,6 @@ function rssSearch($opt){
     if(!$opt['search_query']) return;
 
     require_once(DOKU_INC.'inc/fulltext.php');
-    $data = array();
     $data = ft_pageSearch($opt['search_query'],$poswords);
     $data = array_keys($data);
 

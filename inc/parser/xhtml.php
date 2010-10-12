@@ -442,6 +442,13 @@ class Doku_Renderer_xhtml extends Doku_Renderer {
             $this->doc .= '</a></dt>'.DOKU_LF.'<dd>';
         }
 
+        if ($text{0} == "\n") {
+            $text = substr($text, 1);
+        }
+        if (substr($text, -1) == "\n") {
+            $text = substr($text, 0, -1);
+        }
+
         if ( is_null($language) ) {
             $this->doc .= '<pre class="'.$type.'">'.$this->_xmlEntities($text).'</pre>'.DOKU_LF;
         } else {
@@ -559,6 +566,14 @@ class Doku_Renderer_xhtml extends Doku_Renderer {
     function internallink($id, $name = NULL, $search=NULL,$returnonly=false,$linktype='content') {
         global $conf;
         global $ID;
+
+        $params = '';
+        $parts = explode('?', $id, 2);
+        if (count($parts) === 2) {
+            $id = $parts[0];
+            $params = $parts[1];
+        }
+
         // default name is based on $id as given
         $default = $this->_simpleTitle($id);
 
@@ -592,7 +607,7 @@ class Doku_Renderer_xhtml extends Doku_Renderer {
         }
         $link['more']   = '';
         $link['class']  = $class;
-        $link['url']    = wl($id);
+        $link['url']    = wl($id, $params);
         $link['name']   = $name;
         $link['title']  = $id;
         //add search string
@@ -887,16 +902,23 @@ class Doku_Renderer_xhtml extends Doku_Renderer {
     }
 
     // $numrows not yet implemented
-    function table_open($maxcols = NULL, $numrows = NULL, $pos){
+    function table_open($maxcols = null, $numrows = null, $pos = null){
         global $lang;
         // initialize the row counter used for classes
         $this->_counter['row_counter'] = 0;
-        $this->doc .= '<table class="inline ' . $this->startSectionEdit($pos, 'table') . '">'.DOKU_LF;
+        $class = 'table';
+        if ($pos !== null) {
+            $class .= ' ' . $this->startSectionEdit($pos, 'table');
+        }
+        $this->doc .= '<div class="' . $class . '"><table class="inline">' .
+                      DOKU_LF;
     }
 
-    function table_close($pos){
-        $this->doc .= '</table>'.DOKU_LF;
-        $this->finishSectionEdit($pos);
+    function table_close($pos = null){
+        $this->doc .= '</table></div>'.DOKU_LF;
+        if ($pos !== null) {
+            $this->finishSectionEdit($pos);
+        }
     }
 
     function tablerow_open(){

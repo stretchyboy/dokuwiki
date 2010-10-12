@@ -322,6 +322,7 @@ function search_backlinks(&$data,$base,$file,$type,$lvl,$opts){
     $instructions = p_cached_instructions($base.$file,true);
     if(is_null($instructions)) return false;
 
+    global $conf;
     //check all links for match
     foreach($instructions as $ins){
         if($ins[0] == 'internallink' || ($conf['camelcase'] && $ins[0] == 'camelcaselink') ){
@@ -549,7 +550,7 @@ function search_universal(&$data,$base,$file,$type,$lvl,$opts){
     $return = true;
 
     // get ID and check if it is a valid one
-    $item['id'] = pathID($file);
+    $item['id'] = pathID($file,$opts['keeptxt']);
     if($item['id'] != cleanID($item['id'])){
         if($opts['showmsg'])
             msg(hsc($item['id']).' is not a valid file name for DokuWiki - skipped',-1);
@@ -595,7 +596,7 @@ function search_universal(&$data,$base,$file,$type,$lvl,$opts){
         if(!$opts['listfiles']) return $return;
         if(!$opts['skipacl'] && $item['perm'] < AUTH_READ) return $return;
         if($opts['pagesonly'] && (substr($file,-4) != '.txt')) return $return;
-        if(!$conf['showhidden'] && isHiddenPage($id)) return $return;
+        if(!$opts['showhidden'] && isHiddenPage($item['id'])) return $return;
         if($opts['filematch'] && !preg_match('/'.$opts['filematch'].'/',$file)) return $return;
         if($opts['idmatch'] && !preg_match('/'.$opts['idmatch'].'/',$item['id'])) return $return;
     }

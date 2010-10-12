@@ -2,7 +2,7 @@
 /**
  * UTF8 helper functions
  *
- * @license    LGPL (http://www.gnu.org/copyleft/lesser.html)
+ * @license    LGPL 2.1 (http://www.gnu.org/copyleft/lesser.html)
  * @author     Andreas Gohr <andi@splitbrain.org>
  */
 
@@ -23,7 +23,7 @@ if(!function_exists('utf8_isASCII')){
     /**
      * Checks if a string contains 7bit ASCII only
      *
-     * @author Andreas Haerter <netzmeister@andreas-haerter.de>
+     * @author Andreas Haerter <andreas.haerter@dev.mail-node.com>
      */
     function utf8_isASCII($str){
         return (preg_match('/(?:[^\x00-\x7F])/', $str) !== 1);

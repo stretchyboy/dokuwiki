@@ -137,7 +137,8 @@ function html_secedit_get_button($data) {
                        " editbutton_" . $secid . "'>" .
            html_btn('secedit', $ID, '',
                     array_merge(array('do'  => 'edit',
-                                      'rev' => $INFO['lastmod']), $data),
+                                      'rev' => $INFO['lastmod'],
+                                      'summary' => '['.$name.'] '), $data),
                     'post', $name) . '</div>';
 }
 
@@ -284,7 +285,7 @@ function html_draft(){
  */
 function html_hilight($html,$phrases){
     $phrases = array_filter((array) $phrases);
-    $regex = join('|',array_map('preg_quote_cb',$phrases));
+    $regex = join('|',array_map('ft_snippet_re_preprocess', array_map('preg_quote_cb',$phrases)));
 
     if ($regex === '') return $html;
     $html = preg_replace_callback("/((<[^>]*)|$regex)/ui",'html_hilight_callback',$html);
@@ -318,13 +319,6 @@ function html_search(){
     print p_locale_xhtml('searchpage');
     flush();
 
-    //check if search is restricted to namespace
-    if(preg_match('/@([^@]*)/',$QUERY,$match)) {
-        $id = cleanID($match[1]);
-    } else {
-        $id = cleanID($QUERY);
-    }
-
     //show progressbar
     print '<div class="centeralign" id="dw__loading">'.NL;
     print '<script type="text/javascript" charset="utf-8"><!--//--><![CDATA[//><!--'.NL;
@@ -336,18 +330,22 @@ function html_search(){
     //do quick pagesearch
     $data = array();
 
-    if($id) $data = ft_pageLookup($id);
+    $data = ft_pageLookup($QUERY,true,useHeading('navigation'));
     if(count($data)){
         print '<div class="search_quickresult">';
         print '<h3>'.$lang['quickhits'].':</h3>';
         print '<ul class="search_quickhits">';
-        foreach($data as $id){
+        foreach($data as $id => $title){
             print '<li> ';
-            $ns = getNS($id);
-            if($ns){
-                $name = shorten(noNS($id), ' ('.$ns.')',30);
+            if (useHeading('navigation')) {
+                $name = $title;
             }else{
-                $name = $id;
+                $ns = getNS($id);
+                if($ns){
+                    $name = shorten(noNS($id), ' ('.$ns.')',30);
+                }else{
+                    $name = $id;
+                }
             }
             print html_wikilink(':'.$id,$name);
             print '</li> ';
@@ -986,6 +984,13 @@ function html_diff($text='',$intro=true){
 
     $tdf = new TableDiffFormatter();
     if($intro) print p_locale_xhtml('diff');
+
+    if (!$text) {
+        $diffurl = wl($ID, array('do'=>'diff', 'rev2[0]'=>$l_rev, 'rev2[1]'=>$r_rev));
+        ptln('<p class="difflink">');
+        ptln('  <a class="wikilink1" href="'.$diffurl.'">'.$lang['difflink'].'</a>');
+        ptln('</p>');
+    }
     ?>
     <table class="diff">
     <tr>
@@ -1165,7 +1170,7 @@ function html_edit(){
     $form->addHidden('id', $ID);
     $form->addHidden('rev', $REV);
     $form->addHidden('date', $DATE);
-    $form->addHidden('prefix', $PRE);
+    $form->addHidden('prefix', $PRE . '.');
     $form->addHidden('suffix', $SUF);
     $form->addHidden('changecheck', $check);
 
@@ -1382,6 +1387,12 @@ function html_admin(){
                 );
     }
 
+    // data security check
+    echo '<a style="background: transparent url(data/security.png) left top no-repeat;
+                  display: block; width:380px; height:73px; border:none; float:right"
+           target="_blank"
+           href="http://www.dokuwiki.org/security#web_access_security"></a>';
+
     print p_locale_xhtml('admin');
 
     // Admin Tasks
@@ -1435,7 +1446,11 @@ function html_admin(){
     }
     unset($menu['popularity']);
 
+    // print DokuWiki version:
     ptln('</ul>');
+    echo '<div id="admin__version">';
+    echo getVersion();
+    echo '</div>';
 
     // print the rest as sorted list
     if(count($menu)){

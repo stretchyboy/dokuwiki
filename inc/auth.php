@@ -35,6 +35,7 @@ function auth_setup(){
     global $auth;
     global $AUTH_ACL;
     global $lang;
+    global $config_cascade;
     $AUTH_ACL = array();
 
     if(!$conf['useacl']) return false;
@@ -102,14 +103,34 @@ function auth_setup(){
     }
 
     //load ACL into a global array XXX
-    if(is_readable(DOKU_CONF.'acl.auth.php')){
-        $AUTH_ACL = file(DOKU_CONF.'acl.auth.php');
-        //support user wildcard
-        if(isset($_SERVER['REMOTE_USER'])){
-            $AUTH_ACL = str_replace('%USER%',$_SERVER['REMOTE_USER'],$AUTH_ACL);
-            $AUTH_ACL = str_replace('@USER@',$_SERVER['REMOTE_USER'],$AUTH_ACL); //legacy
+    $AUTH_ACL = auth_loadACL();
+}
+
+/**
+ * Loads the ACL setup and handle user wildcards
+ *
+ * @author Andreas Gohr <andi@splitbrain.org>
+ * @returns array
+ */
+function auth_loadACL(){
+    global $config_cascade;
+
+    if(!is_readable($config_cascade['acl']['default'])) return array();
+
+    $acl = file($config_cascade['acl']['default']);
+
+    //support user wildcard
+    if(isset($_SERVER['REMOTE_USER'])){
+        $len = count($acl);
+        for($i=0; $i<$len; $i++){
+            if($acl[$i]{0} == '#') continue;
+            list($id,$rest) = preg_split('/\s+/',$acl[$i],2);
+            $id   = str_replace('%USER%',cleanID($_SERVER['REMOTE_USER']),$id);
+            $rest = str_replace('%USER%',auth_nameencode($_SERVER['REMOTE_USER']),$rest);
+            $acl[$i] = "$id\t$rest";
         }
     }
+    return $acl;
 }
 
 function auth_login_wrapper($evdata) {
@@ -320,9 +341,7 @@ function auth_logoff($keepbc=false){
         setcookie(DOKU_COOKIE,'',time()-600000,DOKU_REL,'',($conf['securecookie'] && is_ssl()));
     }
 
-    if($auth && $auth->canDo('logoff')){
-        $auth->logOff();
-    }
+    if($auth) $auth->logOff();
 }
 
 /**
@@ -352,7 +371,8 @@ function auth_ismanager($user=null,$groups=null,$adminonly=false){
             $user = $_SERVER['REMOTE_USER'];
         }
     }
-    $user = $auth->cleanUser($user);
+    $user = trim($auth->cleanUser($user));
+    if($user === '') return false;
     if(is_null($groups)) $groups = (array) $USERINFO['grps'];
     $groups = array_map(array($auth,'cleanGroup'),$groups);
     $user   = auth_nameencode($user);
@@ -361,6 +381,7 @@ function auth_ismanager($user=null,$groups=null,$adminonly=false){
     $superusers = explode(',', $conf['superuser']);
     $superusers = array_unique($superusers);
     $superusers = array_map('trim', $superusers);
+    $superusers = array_filter($superusers);
     // prepare an array containing only true values for array_map call
     $alltrue = array_fill(0, count($superusers), true);
     $superusers = array_map('auth_nameencode', $superusers, $alltrue);
@@ -379,6 +400,7 @@ function auth_ismanager($user=null,$groups=null,$adminonly=false){
         $managers = explode(',', $conf['manager']);
         $managers = array_unique($managers);
         $managers = array_map('trim', $managers);
+        $managers = array_filter($managers);
         // prepare an array containing only true values for array_map call
         $alltrue = array_fill(0, count($managers), true);
         $managers = array_map('auth_nameencode', $managers, $alltrue);
@@ -570,6 +592,9 @@ function auth_nameencode($name,$skip_group=false){
     global $cache_authname;
     $cache =& $cache_authname;
     $name  = (string) $name;
+
+    // never encode wildcard FS#1955
+    if($name == '%USER%') return $name;
 
     if (!isset($cache[$name][$skip_group])) {
         if($skip_group && $name{0} =='@'){

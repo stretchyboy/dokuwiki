@@ -213,53 +213,64 @@ function ft_mediause($id,$max){
  * Quicksearch for pagenames
  *
  * By default it only matches the pagename and ignores the
- * namespace. This can be changed with the second parameter
+ * namespace. This can be changed with the second parameter.
+ * The third parameter allows to search in titles as well.
  *
- * refactored into ft_pageLookup(), _ft_pageLookup() and trigger_event()
+ * The function always returns titles as well
  *
+ * @triggers SEARCH_QUERY_PAGELOOKUP
  * @author Andreas Gohr <andi@splitbrain.org>
+ * @author Adrian Lang <lang@cosmocode.de>
  */
-function ft_pageLookup($id,$pageonly=true){
-    $data = array('id' => $id, 'pageonly' => $pageonly);
-    return trigger_event('SEARCH_QUERY_PAGELOOKUP',$data,'_ft_pageLookup');
+function ft_pageLookup($id, $in_ns=false, $in_title=false){
+    $data = compact('id', 'in_ns', 'in_title');
+    $data['has_titles'] = true; // for plugin backward compatibility check
+    return trigger_event('SEARCH_QUERY_PAGELOOKUP', $data, '_ft_pageLookup');
 }
 
 function _ft_pageLookup(&$data){
-    // split out original parameterrs
+    // split out original parameters
     $id = $data['id'];
-    $pageonly = $data['pageonly'];
+    if (preg_match('/(?:^| )@(\w+)/', $id, $matches)) {
+        $ns = cleanID($matches[1]) . ':';
+        $id = str_replace($matches[0], '', $id);
+    }
 
-    global $conf;
-    $id    = preg_quote($id,'/');
-    $pages = file($conf['indexdir'].'/page.idx');
-    if($id) $pages = array_values(preg_grep('/'.$id.'/',$pages));
+    $in_ns    = $data['in_ns'];
+    $in_title = $data['in_title'];
 
-    $cnt = count($pages);
-    for($i=0; $i<$cnt; $i++){
-        if($pageonly){
-            if(!preg_match('/'.$id.'/',noNS($pages[$i]))){
-                unset($pages[$i]);
-                continue;
+    $pages  = array_map('rtrim', idx_getIndex('page', ''));
+    $titles = array_map('rtrim', idx_getIndex('title', ''));
+    $pages = array_combine($pages, $titles);
+
+    $cleaned = cleanID($id);
+    if ($id !== '' && $cleaned !== '') {
+        foreach ($pages as $p_id => $p_title) {
+            if ((strpos($in_ns ? $p_id : noNSorNS($p_id), $cleaned) === false) &&
+                (!$in_title || (stripos($p_title, $id) === false)) ) {
+                unset($pages[$p_id]);
             }
         }
-        if(!page_exists($pages[$i])){
-            unset($pages[$i]);
-            continue;
+    }
+    if (isset($ns)) {
+        foreach (array_keys($pages) as $p_id) {
+            if (strpos($p_id, $ns) !== 0) {
+                unset($pages[$p_id]);
+            }
         }
     }
 
-    $pages = array_filter($pages,'isVisiblePage'); // discard hidden pages
-    if(!count($pages)) return array();
-
+    // discard hidden pages
+    // discard nonexistent pages
     // check ACL permissions
     foreach(array_keys($pages) as $idx){
-        if(auth_quickaclcheck(trim($pages[$idx])) < AUTH_READ){
+        if(!isVisiblePage($idx) || !page_exists($idx) ||
+           auth_quickaclcheck($idx) < AUTH_READ) {
             unset($pages[$idx]);
         }
     }
 
-    $pages = array_map('trim',$pages);
-    usort($pages,'ft_pagesorter');
+    uasort($pages,'ft_pagesorter');
     return $pages;
 }
 
@@ -302,7 +313,7 @@ function ft_snippet($id,$highlight){
         $len = utf8_strlen($text);
 
         // build a regexp from the phrases to highlight
-        $re1 = '('.join('|',array_map('preg_quote_cb',array_filter((array) $highlight))).')';
+        $re1 = '('.join('|',array_map('ft_snippet_re_preprocess', array_map('preg_quote_cb',array_filter((array) $highlight)))).')';
         $re2 = "$re1.{0,75}(?!\\1)$re1";
         $re3 = "$re1.{0,45}(?!\\1)$re1.{0,45}(?!\\1)(?!\\2)$re1";
 
@@ -373,6 +384,24 @@ function ft_snippet($id,$highlight){
     unset($evt);
 
     return $evdata['snippet'];
+}
+
+/**
+ * Wraps a search term in regex boundary checks.
+ */
+function ft_snippet_re_preprocess($term) {
+    if(substr($term,0,2) == '\\*'){
+        $term = substr($term,2);
+    }else{
+        $term = '\b'.$term;
+    }
+
+    if(substr($term,-2,2) == '\\*'){
+        $term = substr($term,0,-2);
+    }else{
+        $term = $term.'\b';
+    }
+    return $term;
 }
 
 /**
@@ -667,7 +696,7 @@ function ft_queryParser($query){
                      break;
             case 'W+:':
                      $q['words'][]     = $body;
-                     $q['highlight'][] = str_replace('*', '', $body);
+                     $q['highlight'][] = $body;
                      $q['and'][]       = $body; // for backward compatibility
                      break;
             case 'P-:':
@@ -675,7 +704,7 @@ function ft_queryParser($query){
                      break;
             case 'P+:':
                      $q['phrases'][]   = $body;
-                     $q['highlight'][] = str_replace('*', '', $body);
+                     $q['highlight'][] = $body;
                      break;
         }
     }
